@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视频对比+可滑动条</title>
+<style>
+  #container {
+    position: relative;
+    width: 1920px; /* 容器宽度 */
+    height: 1056px; /* 容器高度 */
+    border: 1px solid #ccc;
+    overflow: hidden;
+  }
+  #slider {
+    position: absolute;
+    top: 0;
+    left: 50%; /* 初始位置在容器正中央 */
+    transform: translateX(-50%); /* 使滑动条居中 */
+    width: 8px; /* 拖动条宽度 */
+    height: 100%;
+    background-color: #000;
+    cursor: ew-resize; /* 水平拖动光标 */
+    z-index: 3;
+  }
+
+  .slider {
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  }
+  
+  .slider:hover {
+    opacity: 1;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4CAF50;
+    cursor: pointer;
+  }
+  #topVideo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  #bottomVideo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  #playButton {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 4;
+    width: 60px; /* 设置按钮宽度 */
+    height: 50px; /* 设置按钮高度 */
+    font-size: 20px; /* 设置按钮内部文字大小 */
+    background-color: #4CAF50; /* 设置按钮背景颜色 */
+    border: none; /* 移除按钮边框 */
+    border-radius: 50%; /* 设置按钮圆角 */
+    cursor: pointer; /* 设置鼠标悬停样式为手型 */
+    outline: none; /* 移除按钮焦点时的边框 */
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <div id="slider"></div>
+  <video id="topVideo" src={{topVideo}} preload="auto" muted></video>
+  <video id="bottomVideo" src="{{bottomVideo}}" preload="auto" ></video>
+  <button id="playButton">播放</button>
+</div>
+
+<script>
+  // 获取拖动条和视频元素
+  var slider = document.getElementById('slider');
+  var topVideo = document.getElementById('topVideo');
+  var bottomVideo = document.getElementById('bottomVideo');
+  var container = document.getElementById('container');
+  var playButton = document.getElementById('playButton');
+  var isPlaying = false;
+
+  // 设置上层视频的初始显示比例为50%
+  var initialClipValue = 50;
+  var initialClipLeft = container.clientWidth * (1 - initialClipValue / 100);
+
+  // 设置上层视频的初始显示范围
+  topVideo.style.clipPath = 'inset(0% ' + initialClipValue + '% 0% 0%)';
+  // 设置下层视频的初始显示范围
+  bottomVideo.style.clipPath = 'inset(0% 0% 0% ' + initialClipValue + '%)';
+
+  // 播放按钮点击事件
+  playButton.addEventListener('click', function() {
+    if (!isPlaying) {
+      topVideo.play();
+      bottomVideo.play();
+      playButton.textContent = '暂停';
+    } else {
+      topVideo.pause();
+      bottomVideo.pause();
+      playButton.textContent = '播放';
+    }
+    isPlaying = !isPlaying;
+  });
+
+  // 在视频暂停时同步两个视频的 currentTime 值
+  function syncVideoCurrentTime() {
+    var intNum2 = bottomVideo.currentTime;
+    topVideo.currentTime = intNum2;
+    bottomVideo.currentTime = intNum2;
+    console.log("Video has been synced.");
+    console.log("Topvideo currentTime is", topVideo.currentTime);
+    console.log("Bottomvideo currentTime is", bottomVideo.currentTime); 
+  }
+  
+  function handleVideoEnded() {
+    // 将视频的当前时间设置为视频的持续时间
+    topVideo.currentTime = topVideo.duration;
+    bottomVideo.currentTime = bottomVideo.duration;
+    console.log("One video has ended.");
+    console.log("Topvideo currentTime is", topVideo.currentTime);
+    console.log("Bottomvideo currentTime is", bottomVideo.currentTime); 
+  }
+
+  function showTime() {
+    console.log("Topvideo currentTime is", topVideo.currentTime);
+    console.log("Bottomvideo currentTime is", bottomVideo.currentTime); 
+    console.log("The difference is", (topVideo.currentTime - bottomVideo.currentTime)); 
+  }
+  
+  // 监听视频暂停状态
+  topVideo.addEventListener('pause', syncVideoCurrentTime);
+  
+  // 监听视频播放状态
+  // topVideo.addEventListener('play', syncVideoCurrentTime);
+
+  // 鼠标按下事件
+  slider.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    // 记录鼠标按下时的初始坐标
+    var startX = e.clientX;
+    var startLeft = slider.offsetLeft;
+    
+    // 鼠标移动事件
+    function onMouseMove(e) {
+      // 计算鼠标移动的距离
+      var moveX = e.clientX - startX;
+      // 计算拖动条应该移动到的位置
+      var newLeft = startLeft + moveX;
+
+      // 限制拖动条的移动范围在容器内
+      newLeft = Math.max(0, Math.min(newLeft, container.clientWidth));
+
+      // 更新拖动条的位置
+      slider.style.left = newLeft + 'px';
+
+      // 更新上层视频的显示范围
+      var clipValue = newLeft / container.clientWidth * 100;
+      topVideo.style.clipPath = 'inset(0% ' + (100 - clipValue) + '% 0% 0%)';
+      // 更新下层视频的显示范围
+      bottomVideo.style.clipPath = 'inset(0% 0% 0% ' + (clipValue) + '%)';
+    }
+
+    // 鼠标松开事件
+    function onMouseUp() {
+      // 移除移动和松开事件的监听
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+
+    // 添加鼠标移动和松开事件的监听
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+</script>
+
+</body>
+</html>

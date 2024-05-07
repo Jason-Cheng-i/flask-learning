@@ -65,6 +65,12 @@ def inject_user():  # 函数名可以随意修改
 def user_page(name):
     return f'User: {escape(name)}'
 
+@app.route('/vcs')
+def vcs():
+    topVideo_path = r"static/1.mp4"
+    bottomVideo_path = r"static/2.mp4"
+    return render_template('vcs.html', topVideo=topVideo_path, bottomVideo=bottomVideo_path)  # 左侧视频是1.mp4=topVideo
+
 @app.route('/test')
 def test_url_for():
     # 下面是一些调用示例（请访问 http://localhost:5000/test 后在命令行窗口查看输出的 URL）：

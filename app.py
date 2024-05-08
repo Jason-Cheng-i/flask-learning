@@ -71,6 +71,12 @@ def vcs():
     bottomVideo_path = r"static/2.mp4"
     return render_template('vcs.html', topVideo=topVideo_path, bottomVideo=bottomVideo_path)  # 左侧视频是1.mp4=topVideo
 
+@app.route('/vcs_test')
+def vcs_test():
+    topVideo_path = r"static/ref_01.mp4"
+    bottomVideo_path = r"static/pp_01.mp4"
+    return render_template('vcs_test.html', topVideo=topVideo_path, bottomVideo=bottomVideo_path)  # 左侧视频是1.mp4=topVideo
+
 @app.route('/test')
 def test_url_for():
     # 下面是一些调用示例（请访问 http://localhost:5000/test 后在命令行窗口查看输出的 URL）：
